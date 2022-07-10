@@ -23,7 +23,7 @@ func Prepare(wg *sync.WaitGroup) (chan<- Command, *context.CancelFunc, error) {
 
 	for _, pin := range []rpio.Pin{pinExtend, pinRetract, pinStop} {
 		pin.Output()
-		pin.Low()
+		pin.High()
 	}
 
 	c := make(chan Command, 100)
@@ -46,11 +46,14 @@ func loop(c <-chan Command, wg *sync.WaitGroup, ctx context.Context) {
 		case command := <-c:
 			switch command {
 			case Extend:
-				extend()
+				log.Println("Extending awning")
+				trigger(pinExtend)
 			case Retract:
-				retract()
+				log.Println("Retracting awning")
+				trigger(pinRetract)
 			case Stop:
-				stop()
+				log.Println("Stopping awning")
+				trigger(pinStop)
 			}
 		case <-ctx.Done():
 			return
@@ -58,23 +61,8 @@ func loop(c <-chan Command, wg *sync.WaitGroup, ctx context.Context) {
 	}
 }
 
-func retract() {
-	log.Println("Retracting awning")
-	pinRetract.High()
-	time.Sleep(time.Second * 1)
-	pinRetract.Low()
-}
-
-func extend() {
-	log.Println("Extending awning")
-	pinExtend.High()
-	time.Sleep(time.Second * 1)
-	pinExtend.Low()
-}
-
-func stop() {
-	log.Println("Stopping awning")
-	pinStop.High()
-	time.Sleep(time.Second * 1)
-	pinStop.Low()
+func trigger(pin rpio.Pin) {
+	pin.Low()
+	time.Sleep(time.Millisecond * 300)
+	pin.High()
 }
