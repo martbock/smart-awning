@@ -1,0 +1,15 @@
+[Unit]
+Description=Smart Awning
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5
+User=awning
+WorkingDirectory=/home/awning
+ExecStart=/usr/local/bin/smart-awning
+
+[Install]
+WantedBy=multi-user.target
