@@ -2,7 +2,6 @@ package rest
 
 import (
 	"crypto/subtle"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"smart-awning/config"
 )
@@ -16,11 +15,12 @@ func basicAuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		}
 
-		passwordMatch := bcrypt.CompareHashAndPassword([]byte(config.Get("password")), []byte(password)) == nil
-		usernameMatch := subtle.ConstantTimeCompare([]byte(username), []byte(config.Get("username"))) == 1
+		usernamesMatch := subtle.ConstantTimeCompare([]byte(username), []byte(config.HTTP.Username)) == 1
+		passwordsMatch := subtle.ConstantTimeCompare([]byte(password), []byte(config.HTTP.Password)) == 1
 
-		if usernameMatch && passwordMatch {
+		if usernamesMatch && passwordsMatch {
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		w.Header().Set("WWW-Authenticate", `Basic realm="restricted", charset="UTF-8"`)

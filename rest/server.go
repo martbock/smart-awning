@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func Start(commandChan chan<- awning.Command, wg *sync.WaitGroup) (context.CancelFunc, error) {
+func Start(commandChan chan<- awning.Command, wg *sync.WaitGroup) (*context.CancelFunc, error) {
 	router := mux.NewRouter()
 	handler := http.HandlerFunc(makeHandler(commandChan))
 	router.Handle("/", basicAuthMiddleware(handler)).Methods("POST")
@@ -38,7 +39,7 @@ func Start(commandChan chan<- awning.Command, wg *sync.WaitGroup) (context.Cance
 		wg.Done()
 	}()
 
-	return cancel, nil
+	return &cancel, nil
 }
 
 func makeHandler(commandChan chan<- awning.Command) func(w http.ResponseWriter, req *http.Request) {
@@ -71,5 +72,7 @@ func makeHandler(commandChan chan<- awning.Command) func(w http.ResponseWriter, 
 		default:
 			http.Error(w, "Unknown command", http.StatusBadRequest)
 		}
+
+		_, _ = fmt.Fprintln(w, "OK")
 	}
 }

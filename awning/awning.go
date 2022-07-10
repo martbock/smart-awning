@@ -4,25 +4,27 @@ import (
 	"context"
 	"github.com/stianeikeland/go-rpio/v4"
 	"log"
+	"smart-awning/config"
 	"sync"
 	"time"
 )
 
 var (
-	pinRetract = rpio.Pin(10)
-	pinExtend  = rpio.Pin(10)
-	pinStop    = rpio.Pin(10)
+	pinExtend  = rpio.Pin(config.GPIO.PinExtend)
+	pinRetract = rpio.Pin(config.GPIO.PinRetract)
+	pinStop    = rpio.Pin(config.GPIO.PinStop)
 )
 
-func Prepare(wg *sync.WaitGroup) (chan<- Command, context.CancelFunc, error) {
+func Prepare(wg *sync.WaitGroup) (chan<- Command, *context.CancelFunc, error) {
 	err := rpio.Open()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	pinRetract.Output()
-	pinExtend.Output()
-	pinStop.Output()
+	for _, pin := range []rpio.Pin{pinExtend, pinRetract, pinStop} {
+		pin.Output()
+		pin.Low()
+	}
 
 	c := make(chan Command, 100)
 
@@ -30,7 +32,7 @@ func Prepare(wg *sync.WaitGroup) (chan<- Command, context.CancelFunc, error) {
 
 	go loop(c, wg, ctx)
 
-	return c, cancelFunc, nil
+	return c, &cancelFunc, nil
 }
 
 func loop(c <-chan Command, wg *sync.WaitGroup, ctx context.Context) {

@@ -7,8 +7,8 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=5
-User=awning
-WorkingDirectory=/home/awning
+User=pi
+WorkingDirectory=/home/pi
 ExecStart=/usr/local/bin/smart-awning
 
 [Install]
